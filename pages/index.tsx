@@ -2,7 +2,16 @@ import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 
-export default function Home() {
+import { GetServerSideProps } from 'next';
+import { Prisma, PrismaClient, User } from '@prisma/client';
+
+// @ts-ignore
+BigInt.prototype.toJSON = function() {
+  return this.toString()
+}
+
+const index = ({users}: {users: User[]}) => {
+
   return (
     <div className={styles.container}>
       <Head>
@@ -15,6 +24,15 @@ export default function Home() {
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
+
+        <h2>Users</h2>
+
+        <ul>
+          {users.map(user => (
+            <li key={`${user.id}`}>{user.name}</li>
+          )) }
+        </ul>
+
 
         <p className={styles.description}>
           Get started by editing{' '}
@@ -67,5 +85,22 @@ export default function Home() {
         </a>
       </footer>
     </div>
-  )
+  );
 }
+
+
+export const getServerSideProps:GetServerSideProps = async (ctx) => {
+
+  const prisma = new PrismaClient()
+  const users = await prisma.user.findMany()
+
+  console.log('users', users)
+
+  return {
+    props:{
+      users: users.map(u => ({...u}))
+    }
+  }
+}
+
+export default index;
